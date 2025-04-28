@@ -37,14 +37,27 @@ if not st.session_state["next_page"]:
         cash_df,
         use_container_width=True,
         hide_index=True,
-        num_rows="fixed"
+        num_rows="fixed",
+        key="cash_editor"
     )
 
     col1, col2 = st.columns(2)
     with col1:
-        pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
+        pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1, key="pos_cash")
     with col2:
-        pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
+        pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1, key="pos_transfer")
+
+    # Calculate real-time totals
+    counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
+    total_amount = sum([value * count for value, count in counts.items()])
+    pos_total = st.session_state.pos_cash + st.session_state.pos_transfer
+
+    st.markdown(f"""
+    <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
+        <h4>💰 ยอดรวมแบงค์เหรียญ: {total_amount:,} บาท</h4>
+        <h4>💳 ยอดขายรวม (เงินสด + โอน): {pos_total:,} บาท</h4>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
     waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
@@ -53,14 +66,11 @@ if not st.session_state["next_page"]:
     cancel_bills = [st.number_input(f"บิลยกเลิก {i+1}", min_value=0, step=1, key=f"cancel_{i}") for i in range(5)]
 
     if st.button("✅ คำนวณยอดเงินและไปหน้าเงินทอน"):
-        counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
-        total_amount = sum([value * count for value, count in counts.items()])
-
         st.session_state.update({
             "counts": counts,
             "total_amount": total_amount,
-            "pos_cash": pos_cash,
-            "pos_transfer": pos_transfer,
+            "pos_cash": st.session_state.pos_cash,
+            "pos_transfer": st.session_state.pos_transfer,
             "cash_in_drawer": total_amount,
             "waste_bills": waste_bills,
             "cancel_bills": cancel_bills,
