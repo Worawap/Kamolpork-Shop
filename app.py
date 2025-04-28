@@ -83,20 +83,48 @@ if submitted:
         st.markdown("<h3 style='color: #2196F3;'>📋 สรุปเงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        if st.button("📂 บันทึกข้อมูลเป็นไฟล์ CSV"):
-            today = datetime.date.today().strftime("%Y-%m-%d")
-            filename = f"cash_report_{today}.csv"
+        st.markdown("<h3 style='color: #9C27B0;'>📋 กรอกยอดเงินโอน และยอดเงินสดที่ได้รับจากระบบ POS</h3>", unsafe_allow_html=True)
 
-            final_df = pd.concat([
-                pd.DataFrame([{"ประเภท": "รวมเงินสดทั้งหมด", "จำนวน": total_amount}]),
-                pd.DataFrame([{"ประเภท": "เงินทอน 4000 บาท", "จำนวน": 4000}]),
-                pd.DataFrame([{"ประเภท": "ต้องส่งกลับ", "จำนวน": total_amount - 4000}]),
-                pd.DataFrame([{"ประเภท": "-", "จำนวน": "-"}]),
-                send_back_df
-            ])
+        col_input1, col_input2 = st.columns(2)
+        with col_input1:
+            pos_cash = st.number_input("ยอดเงินสดที่ระบบ POS แจ้งมา", min_value=0, step=1)
+        with col_input2:
+            pos_transfer = st.number_input("ยอดเงินโอนที่ระบบ POS แจ้งมา", min_value=0, step=1)
 
-            final_df.to_csv(filename, index=False, encoding='utf-8-sig')
-            st.success(f"📂 บันทึกไฟล์เรียบร้อย: {filename}")
+        if st.button("📊 คำนวณสรุปยอด"):
+            money_left_in_drawer = total_amount
+            total_sale = money_left_in_drawer + sum([v * c for v, c in send_back.items()])
+            cash_received = sum([v * send_back[v] for v in send_back]) - 4000
+            cash_transfer = pos_transfer
+            difference = (cash_received + cash_transfer) - total_sale
+
+            summary = pd.DataFrame({
+                "หัวข้อ": [
+                    "ยอดส่งเงิน", "เงินเหลือในลิ้นชัก", "ยอดขายรวม", "เงินสดที่ได้รับ", "เงินโอน", "เงินทอน", "เงินขาด/เงินเกิน"
+                ],
+                "จำนวนเงิน": [
+                    cash_received, money_left_in_drawer, total_sale, pos_cash, cash_transfer, 4000, difference
+                ],
+                "หน่วย": ["บาท"]*7
+            })
+
+            st.markdown("<h3 style='color: #795548;'>📑 สรุปผลการคำนวณ</h3>", unsafe_allow_html=True)
+            st.dataframe(summary, use_container_width=True)
+
+    if st.button("📂 บันทึกข้อมูลเป็นไฟล์ CSV"):
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        filename = f"cash_report_{today}.csv"
+
+        final_df = pd.concat([
+            pd.DataFrame([{"ประเภท": "รวมเงินสดทั้งหมด", "จำนวน": total_amount}]),
+            pd.DataFrame([{"ประเภท": "เงินทอน 4000 บาท", "จำนวน": 4000}]),
+            pd.DataFrame([{"ประเภท": "ต้องส่งกลับ", "จำนวน": total_amount - 4000}]),
+            pd.DataFrame([{"ประเภท": "-", "จำนวน": "-"}]),
+            send_back_df
+        ])
+
+        final_df.to_csv(filename, index=False, encoding='utf-8-sig')
+        st.success(f"📂 บันทึกไฟล์เรียบร้อย: {filename}")
 
     else:
         st.error("❌ ไม่สามารถจัดเงินทอนให้ครบ 4,000 บาทได้ กรุณาตรวจสอบจำนวนแบงค์/เหรียญอีกครั้ง!")
