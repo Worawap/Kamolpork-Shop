@@ -21,37 +21,40 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
-st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
+if "next_page" not in st.session_state:
+    st.session_state["next_page"] = False
 
-cash_df = pd.DataFrame({
-    "ประเภท": [label for label, _ in cash_types],
-    "จำนวน": [0 for _ in cash_types]
-})
+if not st.session_state["next_page"]:
+    st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-edited_cash_df = st.data_editor(
-    cash_df,
-    use_container_width=True,
-    hide_index=True,
-    num_rows="fixed"
-)
+    cash_df = pd.DataFrame({
+        "ประเภท": [label for label, _ in cash_types],
+        "จำนวน": [0 for _ in cash_types]
+    })
 
-col_input1, col_input2 = st.columns(2)
-with col_input1:
-    pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
-with col_input2:
-    pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
+    edited_cash_df = st.data_editor(
+        cash_df,
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed"
+    )
 
-if st.button("✅ คำนวณยอดเงินและไปหน้าเงินทอน"):
-    counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
-    total_amount = sum([value * count for value, count in counts.items()])
+    col_input1, col_input2 = st.columns(2)
+    with col_input1:
+        pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
+    with col_input2:
+        pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
-    st.session_state["counts"] = counts
-    st.session_state["total_amount"] = total_amount
-    st.session_state["pos_cash"] = pos_cash
-    st.session_state["pos_transfer"] = pos_transfer
-    st.switch_page("เงินทอน")
+    if st.button("✅ คำนวณยอดเงินและไปหน้าเงินทอน"):
+        counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
+        total_amount = sum([value * count for value, count in counts.items()])
 
-if "counts" in st.session_state:
+        st.session_state["counts"] = counts
+        st.session_state["total_amount"] = total_amount
+        st.session_state["pos_cash"] = pos_cash
+        st.session_state["pos_transfer"] = pos_transfer
+        st.session_state["next_page"] = True
+else:
     st.markdown("<h3 style='color: #4CAF50;'>💰 ใส่ข้อมูลเงินทอนที่ต้องเหลือในลิ้นชัก</h3>", unsafe_allow_html=True)
 
     change_df = pd.DataFrame({
