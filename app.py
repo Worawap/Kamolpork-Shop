@@ -46,13 +46,13 @@ if not st.session_state["next_page"]:
 
     col1, col2 = st.columns(2)
     with col1:
-        pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1, key="pos_cash")
+        pos_cash_input = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
     with col2:
-        pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1, key="pos_transfer")
+        pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
     counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
-    pos_total = pos_cash + pos_transfer
+    pos_total = pos_cash_input + pos_transfer_input
 
     st.markdown(f"""
     <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
@@ -71,8 +71,8 @@ if not st.session_state["next_page"]:
         st.session_state.update({
             "counts": counts,
             "total_amount": total_amount,
-            "pos_cash": pos_cash,
-            "pos_transfer": pos_transfer,
+            "pos_cash": pos_cash_input,
+            "pos_transfer": pos_transfer_input,
             "cash_in_drawer": total_amount,
             "waste_bills": waste_bills,
             "cancel_bills": cancel_bills,
@@ -174,3 +174,9 @@ else:
         })
 
         st.dataframe(summary_df, use_container_width=True)
+
+        # Save to CSV
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        filename = f"cashflow_{today}.csv"
+        summary_df.to_csv(filename, index=False)
+        st.success(f"บันทึกข้อมูลลงไฟล์ {filename} เรียบร้อยแล้ว!")
