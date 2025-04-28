@@ -23,7 +23,6 @@ cash_types = [
 
 st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-# สร้าง DataFrame สำหรับ data_editor
 cash_df = pd.DataFrame({
     "ประเภท": [label for label, _ in cash_types],
     "จำนวน": [0 for _ in cash_types]
@@ -42,51 +41,42 @@ with col_input1:
 with col_input2:
     pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
-if st.button("✅ คำนวณยอดเงินและสรุปผล"):
+if st.button("✅ คำนวณยอดเงินและไปหน้าเงินทอน"):
     counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
 
-    st.success(f"✅ ยอดเงินสดรวม: {total_amount:,.0f} บาท")
+    st.session_state["counts"] = counts
+    st.session_state["total_amount"] = total_amount
+    st.session_state["pos_cash"] = pos_cash
+    st.session_state["pos_transfer"] = pos_transfer
+    st.switch_page("เงินทอน")
 
-    def calculate_change(target, counts_available):
-        change_counts = {}
-        remaining = target
-        available = counts_available.copy()
-        denominations = sorted(available.keys())
+if "counts" in st.session_state:
+    st.markdown("<h3 style='color: #4CAF50;'>💰 ใส่ข้อมูลเงินทอนที่ต้องเหลือในลิ้นชัก</h3>", unsafe_allow_html=True)
 
-        for value in denominations:
-            qty = min(available[value], remaining // value)
-            if qty > 0:
-                change_counts[value] = qty
-                remaining -= qty * value
-                available[value] -= qty
+    change_df = pd.DataFrame({
+        "ประเภท": [label for label, _ in cash_types],
+        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types]
+    })
 
-        if remaining > 0:
-            for value in reversed(denominations):
-                while available[value] > 0 and remaining > 0:
-                    available[value] -= 1
-                    change_counts[value] = change_counts.get(value, 0) + 1
-                    remaining -= value
+    edited_change_df = st.data_editor(
+        change_df,
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed"
+    )
 
-        if remaining == 0:
-            return change_counts
-        else:
-            return None
+    if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
+        change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
+        total_change = sum([value * count for value, count in change_counts.items()])
 
-    change_result = calculate_change(4000, counts)
-
-    if change_result:
-        st.success("💰 เงินทอนที่ต้องเหลือไว้ 4,000 บาท เรียบร้อยแล้ว")
-
-        change_df = pd.DataFrame([
-            {"ประเภท": f"{value} บาท", "จำนวนที่เหลือ": count}
-            for value, count in change_result.items()
-        ])
-        st.dataframe(change_df, use_container_width=True)
+        if total_change > 4000:
+            st.error("❌ เงินทอนเกิน 4,000 บาท กรุณาปรับยอดใหม่!")
+            st.stop()
 
         send_back = {}
-        for value in counts:
-            qty_after_change = counts[value] - change_result.get(value, 0)
+        for value in st.session_state["counts"]:
+            qty_after_change = st.session_state["counts"][value] - change_counts.get(value, 0)
             if qty_after_change > 0:
                 send_back[value] = qty_after_change
 
@@ -95,11 +85,13 @@ if st.button("✅ คำนวณยอดเงินและสรุปผ�
             for value, count in send_back.items()
         ])
 
-        st.markdown("<h3 style='color: #795548;'>📋 สรุปเงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
+        st.success("✅ สรุปผลเรียบร้อย!")
+
+        st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        total_sale = pos_cash + pos_transfer
-        total_real = total_amount
+        total_sale = st.session_state["pos_cash"] + st.session_state["pos_transfer"]
+        total_real = st.session_state["total_amount"]
         difference = total_real - total_sale
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
@@ -108,7 +100,3 @@ if st.button("✅ คำนวณยอดเงินและสรุปผ�
             "จำนวนเงิน (บาท)": [total_sale, total_real, difference]
         })
         st.dataframe(summary_df, use_container_width=True)
-
-    else:
-        st.error("❌ ไม่สามารถจัดเงินทอนให้ครบ 4,000 บาทได้ กรุณาตรวจสอบจำนวนแบงค์/เหรียญอีกครั้ง!")
-        st.stop()
