@@ -111,11 +111,32 @@ else:
         total_waste = sum(st.session_state.get("waste_bills", []))
         total_cancel = sum(st.session_state.get("cancel_bills", []))
 
-        difference = (st.session_state.get("cash_in_drawer", 0) - st.session_state.get("pos_cash", 0)) + total_waste + total_cancel
+        cash_received = st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0)
+        actual_cash = st.session_state.get("cash_in_drawer", 0)
+
+        difference = (cash_received) - (total_real - actual_cash) - total_waste - total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
         summary_df = pd.DataFrame({
-            "รายการ": ["ยอดขายจากระบบ POS", "ยอดเงินสดนับจริง", "เงินขาด/เกิน"],
-            "จำนวนเงิน (บาท)": [total_sale, total_real, difference]
+            "รายการ": [
+                "ยอดขายจากระบบ POS",
+                "เงินสดที่ได้รับ (POS)",
+                "เงินโอน (POS)",
+                "ยอดเงินสดนับจริง",
+                "เงินเหลือในลิ้นชัก",
+                "ยอดรวมของเสีย",
+                "ยอดรวมบิลยกเลิก",
+                "เงินขาด/เกิน"
+            ],
+            "จำนวนเงิน (บาท)": [
+                total_sale,
+                st.session_state.get("pos_cash", 0),
+                st.session_state.get("pos_transfer", 0),
+                total_real,
+                actual_cash,
+                total_waste,
+                total_cancel,
+                difference
+            ]
         })
         st.dataframe(summary_df, use_container_width=True)
