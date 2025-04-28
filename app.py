@@ -9,7 +9,6 @@ st.markdown("""
     <hr style='border:1px solid #FF4B4B;'>
 """, unsafe_allow_html=True)
 
-# กำหนดค่าประเภทแบงค์และเหรียญ
 cash_types = [
     ("1,000 บาท", 1000),
     ("500 บาท", 500),
@@ -22,7 +21,6 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
-# สร้างฟอร์มกรอกข้อมูล
 with st.form("cash_input_form"):
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
@@ -47,7 +45,7 @@ if submitted:
         change_counts = {}
         remaining = target
 
-        for value in sorted(counts_available.keys()):
+        for value in sorted(counts_available.keys(), reverse=True):
             max_use = min(counts_available[value], remaining // value)
             if max_use > 0:
                 change_counts[value] = max_use
