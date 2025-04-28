@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import itertools
 
 st.set_page_config(page_title="กรอกเงินสดหน้าร้าน", layout="centered")
 
@@ -21,22 +22,21 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
-with st.form("cash_input_form"):
-    st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
+counts = {}
 
-    counts = {}
-    for label, value in cash_types:
-        with st.container():
-            cols = st.columns([2, 1, 1])
-            with cols[0]:
-                st.markdown(f"<div style='padding-top: 8px; font-size:18px; color: #333;'>{label}</div>", unsafe_allow_html=True)
-            with cols[1]:
-                count = st.number_input("", min_value=0, step=1, key=f"count_{value}")
-                counts[value] = count
+st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    submitted = st.form_submit_button("✅ คำนวณยอดเงิน")
+for idx, (label, value) in enumerate(cash_types):
+    count = st.number_input(
+        label,
+        min_value=0,
+        step=1,
+        key=f"count_{value}",
+        label_visibility="visible",
+    )
+    counts[value] = count
 
-if submitted:
+if st.button("✅ คำนวณยอดเงิน"):
     total_amount = sum([value * count for value, count in counts.items()])
 
     st.success(f"✅ ยอดเงินสดรวม: {total_amount:,.0f} บาท")
@@ -45,12 +45,21 @@ if submitted:
         change_counts = {}
         remaining = target
         available = counts_available.copy()
+        denominations = sorted(available.keys())
 
-        for value in sorted(available.keys()):
-            while available[value] > 0 and remaining >= value:
-                available[value] -= 1
-                change_counts[value] = change_counts.get(value, 0) + 1
-                remaining -= value
+        for value in denominations:
+            qty = min(available[value], remaining // value)
+            if qty > 0:
+                change_counts[value] = qty
+                remaining -= qty * value
+                available[value] -= qty
+
+        if remaining > 0:
+            for value in reversed(denominations):
+                while available[value] > 0 and remaining > 0:
+                    available[value] -= 1
+                    change_counts[value] = change_counts.get(value, 0) + 1
+                    remaining -= value
 
         if remaining == 0:
             return change_counts
@@ -110,20 +119,20 @@ if submitted:
             st.markdown("<h3 style='color: #795548;'>📑 สรุปผลการคำนวณ</h3>", unsafe_allow_html=True)
             st.dataframe(summary, use_container_width=True)
 
-    if st.button("📂 บันทึกข้อมูลเป็นไฟล์ CSV"):
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        filename = f"cash_report_{today}.csv"
+        if st.button("📂 บันทึกข้อมูลเป็นไฟล์ CSV"):
+            today = datetime.date.today().strftime("%Y-%m-%d")
+            filename = f"cash_report_{today}.csv"
 
-        final_df = pd.concat([
-            pd.DataFrame([{"ประเภท": "รวมเงินสดทั้งหมด", "จำนวน": total_amount}]),
-            pd.DataFrame([{"ประเภท": "เงินทอน 4000 บาท", "จำนวน": 4000}]),
-            pd.DataFrame([{"ประเภท": "ต้องส่งกลับ", "จำนวน": total_amount - 4000}]),
-            pd.DataFrame([{"ประเภท": "-", "จำนวน": "-"}]),
-            send_back_df
-        ])
+            final_df = pd.concat([
+                pd.DataFrame([{"ประเภท": "รวมเงินสดทั้งหมด", "จำนวน": total_amount}]),
+                pd.DataFrame([{"ประเภท": "เงินทอน 4000 บาท", "จำนวน": 4000}]),
+                pd.DataFrame([{"ประเภท": "ต้องส่งกลับ", "จำนวน": total_amount - 4000}]),
+                pd.DataFrame([{"ประเภท": "-", "จำนวน": "-"}]),
+                send_back_df
+            ])
 
-        final_df.to_csv(filename, index=False, encoding='utf-8-sig')
-        st.success(f"📂 บันทึกไฟล์เรียบร้อย: {filename}")
+            final_df.to_csv(filename, index=False, encoding='utf-8-sig')
+            st.success(f"📂 บันทึกไฟล์เรียบร้อย: {filename}")
 
     else:
         st.error("❌ ไม่สามารถจัดเงินทอนให้ครบ 4,000 บาทได้ กรุณาตรวจสอบจำนวนแบงค์/เหรียญอีกครั้ง!")
