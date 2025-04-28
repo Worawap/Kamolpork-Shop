@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import itertools
 
 st.set_page_config(page_title="กรอกเงินสดหน้าร้าน", layout="centered")
 
@@ -22,21 +21,23 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
-counts = {}
-
 st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-for idx, (label, value) in enumerate(cash_types):
-    count = st.number_input(
-        label,
-        min_value=0,
-        step=1,
-        key=f"count_{value}",
-        label_visibility="visible",
-    )
-    counts[value] = count
+# สร้าง DataFrame สำหรับ data_editor
+cash_df = pd.DataFrame({
+    "ประเภท": [label for label, _ in cash_types],
+    "จำนวน": [0 for _ in cash_types]
+})
+
+edited_cash_df = st.data_editor(
+    cash_df,
+    use_container_width=True,
+    hide_index=True,
+    num_rows="fixed"
+)
 
 if st.button("✅ คำนวณยอดเงิน"):
+    counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
 
     st.success(f"✅ ยอดเงินสดรวม: {total_amount:,.0f} บาท")
