@@ -106,12 +106,12 @@ else:
         st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        total_sale = st.session_state["pos_cash"] + st.session_state["pos_transfer"]
-        total_real = st.session_state["total_amount"]
-        total_waste = sum(st.session_state["waste_bills"])
-        total_cancel = sum(st.session_state["cancel_bills"])
+        total_sale = st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0)
+        total_real = st.session_state.get("total_amount", 0)
+        total_waste = sum(st.session_state.get("waste_bills", []))
+        total_cancel = sum(st.session_state.get("cancel_bills", []))
 
-        difference = (st.session_state["cash_in_drawer"] - st.session_state["pos_cash"]) + total_waste + total_cancel
+        difference = (st.session_state.get("cash_in_drawer", 0) - st.session_state.get("pos_cash", 0)) + total_waste + total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
         summary_df = pd.DataFrame({
