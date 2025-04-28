@@ -39,21 +39,34 @@ if not st.session_state["next_page"]:
         num_rows="fixed"
     )
 
-    col_input1, col_input2 = st.columns(2)
-    with col_input1:
+    col1, col2, col3 = st.columns(3)
+    with col1:
         pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
-    with col_input2:
+    with col2:
         pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
+    with col3:
+        cash_in_drawer = st.number_input("💼 เงินเหลือในลิ้นชักทั้งหมด", min_value=0, step=1)
+
+    st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
+    waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
+
+    st.markdown("<h4 style='color: #4CAF50;'>🧾 บิลยกเลิก</h4>", unsafe_allow_html=True)
+    cancel_bills = [st.number_input(f"บิลยกเลิก {i+1}", min_value=0, step=1, key=f"cancel_{i}") for i in range(5)]
 
     if st.button("✅ คำนวณยอดเงินและไปหน้าเงินทอน"):
         counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
         total_amount = sum([value * count for value, count in counts.items()])
 
-        st.session_state["counts"] = counts
-        st.session_state["total_amount"] = total_amount
-        st.session_state["pos_cash"] = pos_cash
-        st.session_state["pos_transfer"] = pos_transfer
-        st.session_state["next_page"] = True
+        st.session_state.update({
+            "counts": counts,
+            "total_amount": total_amount,
+            "pos_cash": pos_cash,
+            "pos_transfer": pos_transfer,
+            "cash_in_drawer": cash_in_drawer,
+            "waste_bills": waste_bills,
+            "cancel_bills": cancel_bills,
+            "next_page": True
+        })
 else:
     st.markdown("<h3 style='color: #4CAF50;'>💰 ใส่ข้อมูลเงินทอนที่ต้องเหลือในลิ้นชัก</h3>", unsafe_allow_html=True)
 
@@ -95,7 +108,10 @@ else:
 
         total_sale = st.session_state["pos_cash"] + st.session_state["pos_transfer"]
         total_real = st.session_state["total_amount"]
-        difference = total_real - total_sale
+        total_waste = sum(st.session_state["waste_bills"])
+        total_cancel = sum(st.session_state["cancel_bills"])
+
+        difference = (st.session_state["cash_in_drawer"] - st.session_state["pos_cash"]) + total_waste + total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
         summary_df = pd.DataFrame({
