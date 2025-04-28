@@ -44,12 +44,13 @@ if submitted:
     def calculate_change(target, counts_available):
         change_counts = {}
         remaining = target
+        available = counts_available.copy()
 
-        for value in sorted(counts_available.keys()):
-            max_use = min(counts_available[value], remaining // value)
-            if max_use > 0:
-                change_counts[value] = max_use
-                remaining -= value * max_use
+        for value in sorted(available.keys()):
+            while available[value] > 0 and remaining >= value:
+                available[value] -= 1
+                change_counts[value] = change_counts.get(value, 0) + 1
+                remaining -= value
 
         if remaining == 0:
             return change_counts
