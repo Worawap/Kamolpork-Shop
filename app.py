@@ -45,7 +45,7 @@ if submitted:
         change_counts = {}
         remaining = target
 
-        for value in sorted(counts_available.keys(), reverse=True):
+        for value in sorted(counts_available.keys()):
             max_use = min(counts_available[value], remaining // value)
             if max_use > 0:
                 change_counts[value] = max_use
