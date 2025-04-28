@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="กรอกเงินสดหน้าร้าน", layout="centered")
 
@@ -39,13 +40,11 @@ if not st.session_state["next_page"]:
         num_rows="fixed"
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         pos_cash = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
     with col2:
         pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
-    with col3:
-        cash_in_drawer = st.number_input("💼 เงินเหลือในลิ้นชักทั้งหมด", min_value=0, step=1)
 
     st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
     waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
@@ -62,7 +61,7 @@ if not st.session_state["next_page"]:
             "total_amount": total_amount,
             "pos_cash": pos_cash,
             "pos_transfer": pos_transfer,
-            "cash_in_drawer": cash_in_drawer,
+            "cash_in_drawer": total_amount,
             "waste_bills": waste_bills,
             "cancel_bills": cancel_bills,
             "next_page": True
@@ -130,6 +129,13 @@ else:
         </div>
         """
         st.markdown(styled_summary, unsafe_allow_html=True)
+
+        if abs(difference) > 500:
+            components.html("""
+            <audio autoplay>
+              <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+            </audio>
+            """, height=0)
 
         summary_df = pd.DataFrame({
             "รายการ": [
