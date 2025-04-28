@@ -106,37 +106,54 @@ else:
         st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        total_sale = st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0)
-        total_real = st.session_state.get("total_amount", 0)
+        pos_cash = st.session_state.get("pos_cash", 0)
+        pos_transfer = st.session_state.get("pos_transfer", 0)
+        cash_in_drawer = st.session_state.get("cash_in_drawer", 0)
+        total_amount = st.session_state.get("total_amount", 0)
         total_waste = sum(st.session_state.get("waste_bills", []))
         total_cancel = sum(st.session_state.get("cancel_bills", []))
 
-        cash_received = st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0)
-        actual_cash = st.session_state.get("cash_in_drawer", 0)
+        pos_total = pos_cash + pos_transfer
 
-        difference = (cash_received) - (total_real - actual_cash) - total_waste - total_cancel
+        difference = ((cash_in_drawer - 4000) + total_waste + total_cancel) - pos_cash
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
+
+        diff_color = "#4CAF50" if difference > 0 else ("#FF9800" if difference == 0 else "#F44336")
+        diff_message = "ยอดเงินตรงเป๊ะ เยี่ยมมาก! 🎉" if difference == 0 else ("เงินเกินนิดหน่อยครับ" if difference > 0 else "เงินขาด กรุณาตรวจสอบ!")
+
+        styled_summary = f"""
+        <div style='padding:10px; background-color:{diff_color}; color:white; border-radius:8px; text-align:center;'>
+            <h2>{diff_message}</h2>
+            <p>ขาด/เกิน {difference:.2f} บาท</p>
+        </div>
+        """
+        st.markdown(styled_summary, unsafe_allow_html=True)
+
         summary_df = pd.DataFrame({
             "รายการ": [
-                "ยอดขายจากระบบ POS",
-                "เงินสดที่ได้รับ (POS)",
-                "เงินโอน (POS)",
-                "ยอดเงินสดนับจริง",
-                "เงินเหลือในลิ้นชัก",
-                "ยอดรวมของเสีย",
-                "ยอดรวมบิลยกเลิก",
-                "เงินขาด/เกิน"
+                "ยอดส่งเงิน",
+                "เงินเหลือไว้ในลิ้นชัก",
+                "ยอดขายรวม",
+                "เงินสดที่ได้รับ",
+                "เงินโอน",
+                "เงินทอน",
+                "เงินขาด/เงินเกิน",
+                "ของเสีย",
+                "บิลยกเลิก",
+                "ทำบดดี"
             ],
             "จำนวนเงิน (บาท)": [
-                total_sale,
-                st.session_state.get("pos_cash", 0),
-                st.session_state.get("pos_transfer", 0),
-                total_real,
-                actual_cash,
+                cash_in_drawer - 4000,
+                cash_in_drawer,
+                pos_total,
+                pos_cash,
+                pos_transfer,
+                4000,
+                difference,
                 total_waste,
                 total_cancel,
-                difference
+                0
             ]
         })
         st.dataframe(summary_df, use_container_width=True)
