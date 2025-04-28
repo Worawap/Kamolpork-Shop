@@ -2,10 +2,12 @@ import streamlit as st
 import pandas as pd
 import datetime
 
-st.set_page_config(page_title="💵 กรอกเงินสดหน้าร้าน", layout="centered")
+st.set_page_config(page_title="กรอกเงินสดหน้าร้าน", layout="centered")
 
-st.title("\ud83d\udcb5 ระบบกรอกเงินสดหน้าร้าน - ขายหมูหน้าร้าน")
-st.markdown("---")
+st.markdown("""
+    <h1 style='text-align: center; color: #FF4B4B;'>ระบบกรอกเงินสดหน้าร้าน - ขายหมูหน้าร้าน</h1>
+    <hr style='border:1px solid #FF4B4B;'>
+""", unsafe_allow_html=True)
 
 # กำหนดค่าประเภทแบงค์และเหรียญ
 cash_types = [
@@ -22,27 +24,25 @@ cash_types = [
 
 # สร้างฟอร์มกรอกข้อมูล
 with st.form("cash_input_form"):
-    st.subheader("\ud83d\udcc5 กรอกจำนวนแบงค์และเหรียญ")
+    st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
     counts = {}
     for label, value in cash_types:
         with st.container():
             cols = st.columns([2, 1, 1])
             with cols[0]:
-                st.markdown(f"<div style='padding-top: 8px; font-size:18px;'>{label}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='padding-top: 8px; font-size:18px; color: #333;'>{label}</div>", unsafe_allow_html=True)
             with cols[1]:
                 count = st.number_input("", min_value=0, step=1, key=f"count_{value}")
                 counts[value] = count
 
-    submitted = st.form_submit_button("\ud83d\ude80 คำนวณยอดเงิน")
+    submitted = st.form_submit_button("✅ คำนวณยอดเงิน")
 
 if submitted:
-    # คำนวณยอดเงินรวม
     total_amount = sum([value * count for value, count in counts.items()])
-    
-    st.success(f"\ud83d\udcc8 ยอดเงินสดรวม: {total_amount:,.0f} บาท")
 
-    # ฟังก์ชันหาเงินทอน 4000 บาท แบบเรียงใบเล็กก่อน
+    st.success(f"✅ ยอดเงินสดรวม: {total_amount:,.0f} บาท")
+
     def calculate_change(target, counts_available):
         change_counts = {}
         remaining = target
@@ -61,16 +61,14 @@ if submitted:
     change_result = calculate_change(4000, counts)
 
     if change_result:
-        st.success("\ud83d\udcb0 เงินทอนที่ต้องเหลือไว้ 4,000 บาท เรียบร้อยแล้ว")
+        st.success("💰 เงินทอนที่ต้องเหลือไว้ 4,000 บาท เรียบร้อยแล้ว")
 
-        # ตารางแสดงผล
         change_df = pd.DataFrame([
             {"ประเภท": f"{value} บาท", "จำนวนที่เหลือ": count}
             for value, count in change_result.items()
         ])
         st.dataframe(change_df, use_container_width=True)
 
-        # คำนวณเงินที่ต้องส่งกลับ
         send_back = {}
         for value in counts:
             qty_after_change = counts[value] - change_result.get(value, 0)
@@ -82,14 +80,13 @@ if submitted:
             for value, count in send_back.items()
         ])
 
-        st.subheader("\ud83d\udcce สรุปเงินสดที่ต้องส่งกลับบริษัท")
+        st.markdown("<h3 style='color: #2196F3;'>📋 สรุปเงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        # ปุ่มบันทึกข้อมูล
-        if st.button("\ud83d\udcc2 บันทึกข้อมูลเป็นไฟล์ CSV"):
+        if st.button("📂 บันทึกข้อมูลเป็นไฟล์ CSV"):
             today = datetime.date.today().strftime("%Y-%m-%d")
             filename = f"cash_report_{today}.csv"
-            
+
             final_df = pd.concat([
                 pd.DataFrame([{"ประเภท": "รวมเงินสดทั้งหมด", "จำนวน": total_amount}]),
                 pd.DataFrame([{"ประเภท": "เงินทอน 4000 บาท", "จำนวน": 4000}]),
@@ -99,8 +96,8 @@ if submitted:
             ])
 
             final_df.to_csv(filename, index=False, encoding='utf-8-sig')
-            st.success(f"\ud83d\udcce บันทึกไฟล์เรียบร้อย: {filename}")
+            st.success(f"📂 บันทึกไฟล์เรียบร้อย: {filename}")
 
     else:
-        st.error("\u274c ไม่สามารถจัดเงินทอนให้ครบ 4,000 บาทได้ \nกรุณาตรวจสอบจำนวนแบงค์/เหรียญอีกครั้ง!")
+        st.error("❌ ไม่สามารถจัดเงินทอนให้ครบ 4,000 บาทได้ กรุณาตรวจสอบจำนวนแบงค์/เหรียญอีกครั้ง!")
         st.stop()
