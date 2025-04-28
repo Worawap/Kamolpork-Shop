@@ -67,6 +67,7 @@ if not st.session_state["next_page"]:
             "cancel_bills": cancel_bills,
             "next_page": True
         })
+
 else:
     st.markdown("<h3 style='color: #4CAF50;'>💰 ใส่ข้อมูลเงินทอนที่ต้องเหลือในลิ้นชัก</h3>", unsafe_allow_html=True)
 
@@ -109,13 +110,13 @@ else:
         pos_cash = st.session_state.get("pos_cash", 0)
         pos_transfer = st.session_state.get("pos_transfer", 0)
         cash_in_drawer = st.session_state.get("cash_in_drawer", 0)
-        total_amount = st.session_state.get("total_amount", 0)
         total_waste = sum(st.session_state.get("waste_bills", []))
         total_cancel = sum(st.session_state.get("cancel_bills", []))
 
         pos_total = pos_cash + pos_transfer
 
-        difference = ((cash_in_drawer - 4000) + total_waste + total_cancel) - pos_cash
+        # สูตรเงินขาด/เกินใหม่
+        difference = (cash_in_drawer - pos_cash) + total_waste + total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
 
@@ -141,7 +142,6 @@ else:
                 "เงินขาด/เงินเกิน",
                 "ของเสีย",
                 "บิลยกเลิก",
-                "ทำบดดี"
             ],
             "จำนวนเงิน (บาท)": [
                 cash_in_drawer - 4000,
@@ -152,8 +152,8 @@ else:
                 4000,
                 difference,
                 total_waste,
-                total_cancel,
-                0
+                total_cancel
             ]
         })
+
         st.dataframe(summary_df, use_container_width=True)
