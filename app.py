@@ -22,24 +22,27 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
+if "cash_editor" not in st.session_state:
+    st.session_state["cash_editor"] = pd.DataFrame({
+        "ประเภท": [label for label, _ in cash_types],
+        "จำนวน": [0 for _ in cash_types]
+    })
+
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
 
 if not st.session_state["next_page"]:
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    cash_df = pd.DataFrame({
-        "ประเภท": [label for label, _ in cash_types],
-        "จำนวน": [0 for _ in cash_types]
-    })
-
     edited_cash_df = st.data_editor(
-        cash_df,
+        st.session_state["cash_editor"],
         use_container_width=True,
         hide_index=True,
         num_rows="fixed",
-        key="cash_editor"
+        key="cash_editor_editor"
     )
+
+    st.session_state["cash_editor"] = edited_cash_df
 
     col1, col2 = st.columns(2)
     with col1:
@@ -47,10 +50,9 @@ if not st.session_state["next_page"]:
     with col2:
         pos_transfer = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1, key="pos_transfer")
 
-    # Calculate real-time totals
-    counts = dict(zip([value for _, value in cash_types], edited_cash_df["จำนวน"]))
+    counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
-    pos_total = st.session_state.pos_cash + st.session_state.pos_transfer
+    pos_total = pos_cash + pos_transfer
 
     st.markdown(f"""
     <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
@@ -69,8 +71,8 @@ if not st.session_state["next_page"]:
         st.session_state.update({
             "counts": counts,
             "total_amount": total_amount,
-            "pos_cash": st.session_state.pos_cash,
-            "pos_transfer": st.session_state.pos_transfer,
+            "pos_cash": pos_cash,
+            "pos_transfer": pos_transfer,
             "cash_in_drawer": total_amount,
             "waste_bills": waste_bills,
             "cancel_bills": cancel_bills,
@@ -124,7 +126,6 @@ else:
 
         pos_total = pos_cash + pos_transfer
 
-        # สูตรเงินขาด/เกินใหม่
         difference = (cash_in_drawer - pos_cash) + total_waste + total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
