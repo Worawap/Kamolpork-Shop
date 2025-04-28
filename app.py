@@ -126,6 +126,7 @@ else:
 
         pos_total = pos_cash + pos_transfer
 
+        # สูตรใหม่ตามที่ผู้ใช้กำหนด
         difference = (cash_in_drawer - pos_cash) + total_waste + total_cancel
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
@@ -167,7 +168,7 @@ else:
                 pos_cash,
                 pos_transfer,
                 4000,
-                difference,
+                (cash_in_drawer - pos_cash) + total_waste + total_cancel,
                 total_waste,
                 total_cancel
             ]
@@ -175,7 +176,6 @@ else:
 
         st.dataframe(summary_df, use_container_width=True)
 
-        # Save to CSV
         today = datetime.date.today().strftime("%Y-%m-%d")
         filename = f"cashflow_{today}.csv"
         summary_df.to_csv(filename, index=False)
