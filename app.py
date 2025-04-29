@@ -106,3 +106,8 @@ if not st.session_state["next_page"]:
             "cancel_bills": cancel_total,
             "next_page": True
         })
+else:
+    st.markdown("""
+        <h2 style='color: #4CAF50;'>💵 หน้ากรอกเงินทอน</h2>
+        <p>กำลังเตรียมระบบเงินทอนให้พร้อมใช้งาน...</p>
+    """, unsafe_allow_html=True)
