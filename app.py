@@ -29,19 +29,19 @@ if "cash_editor" not in st.session_state:
     })
 
 if "pork_table" not in st.session_state:
-    st.session_state["pork_table"] = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+    st.session_state["pork_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
 
 if "package_table" not in st.session_state:
-    st.session_state["package_table"] = pd.DataFrame({"No": [1], "เลขที่บิล": [""], "จำนวนเงิน": [0]})
+    st.session_state["package_table"] = pd.DataFrame({"No": [], "เลขที่บิล": [], "จำนวนเงิน": []})
 
 if "drink_table" not in st.session_state:
-    st.session_state["drink_table"] = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+    st.session_state["drink_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
 
-if "waste_bills" not in st.session_state:
-    st.session_state["waste_bills"] = [0 for _ in range(5)]
+if "waste_table" not in st.session_state:
+    st.session_state["waste_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
 
-if "cancel_bills" not in st.session_state:
-    st.session_state["cancel_bills"] = [0 for _ in range(5)]
+if "cancel_table" not in st.session_state:
+    st.session_state["cancel_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
 
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
@@ -49,16 +49,14 @@ if "next_page" not in st.session_state:
 if not st.session_state["next_page"]:
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    edited_cash_df = st.data_editor(
+    st.session_state["cash_editor"] = st.data_editor(
         st.session_state["cash_editor"],
         use_container_width=True,
         hide_index=True,
-        num_rows="fixed",
+        num_rows="dynamic",
         key="cash_editor_editor",
         disabled=False
     )
-
-    st.session_state["cash_editor"] = edited_cash_df
 
     col1, col2 = st.columns(2)
     with col1:
@@ -66,44 +64,28 @@ if not st.session_state["next_page"]:
     with col2:
         pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
-    st.markdown("<h4 style='color: #4CAF50;'>🍖 รายการหมูหมัก</h4>", unsafe_allow_html=True)
-    st.session_state["pork_table"] = st.data_editor(
-        st.session_state["pork_table"],
-        use_container_width=True,
-        key="pork_table_editor",
-        disabled=False
-    )
+    def section(title, table_key):
+        st.markdown(f"<h4 style='color: #4CAF50;'>🍖 {title}</h4>", unsafe_allow_html=True)
+        st.session_state[table_key] = st.data_editor(
+            st.session_state[table_key],
+            use_container_width=True,
+            hide_index=True,
+            num_rows="dynamic",
+            key=f"{table_key}_editor",
+            disabled=False
+        )
+        if not st.session_state[table_key].empty:
+            total = st.session_state[table_key]["จำนวนเงิน"].sum()
+        else:
+            total = 0
+        st.markdown(f"รวมยอด {title}: {total:,} บาท")
+        return total
 
-    pork_total = st.session_state["pork_table"]["จำนวนเงิน"].sum() if not st.session_state["pork_table"].empty else 0
-    st.markdown(f"รวมยอดหมูหมัก: {pork_total} บาท")
-
-    st.markdown("<h4 style='color: #4CAF50;'>📦 รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม</h4>", unsafe_allow_html=True)
-    st.session_state["package_table"] = st.data_editor(
-        st.session_state["package_table"],
-        use_container_width=True,
-        key="package_table_editor",
-        disabled=False
-    )
-
-    package_total = st.session_state["package_table"]["จำนวนเงิน"].sum() if not st.session_state["package_table"].empty else 0
-    st.markdown(f"รวมยอดถุง/ของแปรรูป/แหนม: {package_total} บาท")
-
-    st.markdown("<h4 style='color: #4CAF50;'>🥤 รายการเครื่องดื่ม/เครื่องปรุง</h4>", unsafe_allow_html=True)
-    st.session_state["drink_table"] = st.data_editor(
-        st.session_state["drink_table"],
-        use_container_width=True,
-        key="drink_table_editor",
-        disabled=False
-    )
-
-    drink_total = st.session_state["drink_table"]["จำนวนเงิน"].sum() if not st.session_state["drink_table"].empty else 0
-    st.markdown(f"รวมยอดเครื่องดื่ม/เครื่องปรุง: {drink_total} บาท")
-
-    st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
-    waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
-
-    st.markdown("<h4 style='color: #4CAF50;'>🧾 บิลยกเลิก</h4>", unsafe_allow_html=True)
-    cancel_bills = [st.number_input(f"บิลยกเลิก {i+1}", min_value=0, step=1, key=f"cancel_{i}") for i in range(5)]
+    pork_total = section("รายการหมูหมัก", "pork_table")
+    package_total = section("รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม", "package_table")
+    drink_total = section("รายการเครื่องดื่ม/เครื่องปรุง", "drink_table")
+    waste_total = section("บิลของเสีย", "waste_table")
+    cancel_total = section("บิลยกเลิก", "cancel_table")
 
     counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
@@ -126,7 +108,7 @@ if not st.session_state["next_page"]:
             "pork_marinated": pork_total,
             "processed_goods": package_total,
             "drinks_seasoning": drink_total,
-            "waste_bills": waste_bills,
-            "cancel_bills": cancel_bills,
+            "waste_bills": waste_total,
+            "cancel_bills": cancel_total,
             "next_page": True
         })
