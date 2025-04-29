@@ -29,13 +29,19 @@ if "cash_editor" not in st.session_state:
     })
 
 if "pork_table" not in st.session_state:
-    st.session_state["pork_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["pork_table"] = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
 
 if "package_table" not in st.session_state:
-    st.session_state["package_table"] = pd.DataFrame({"No": [], "เลขที่บิล": [], "จำนวนเงิน": []})
+    st.session_state["package_table"] = pd.DataFrame({"No": [1], "เลขที่บิล": [""], "จำนวนเงิน": [0]})
 
 if "drink_table" not in st.session_state:
-    st.session_state["drink_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["drink_table"] = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+
+if "waste_bills" not in st.session_state:
+    st.session_state["waste_bills"] = [0 for _ in range(5)]
+
+if "cancel_bills" not in st.session_state:
+    st.session_state["cancel_bills"] = [0 for _ in range(5)]
 
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
@@ -89,6 +95,12 @@ if not st.session_state["next_page"]:
     drink_total = st.session_state["drink_table"]["จำนวนเงิน"].sum() if not st.session_state["drink_table"].empty else 0
     st.markdown(f"รวมยอดเครื่องดื่ม/เครื่องปรุง: {drink_total} บาท")
 
+    st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
+    waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
+
+    st.markdown("<h4 style='color: #4CAF50;'>🧾 บิลยกเลิก</h4>", unsafe_allow_html=True)
+    cancel_bills = [st.number_input(f"บิลยกเลิก {i+1}", min_value=0, step=1, key=f"cancel_{i}") for i in range(5)]
+
     counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
     pos_total = pos_cash_input + pos_transfer_input
@@ -110,5 +122,7 @@ if not st.session_state["next_page"]:
             "pork_marinated": pork_total,
             "processed_goods": package_total,
             "drinks_seasoning": drink_total,
+            "waste_bills": waste_bills,
+            "cancel_bills": cancel_bills,
             "next_page": True
         })
