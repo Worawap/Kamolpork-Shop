@@ -28,20 +28,26 @@ if "cash_editor" not in st.session_state:
         "จำนวน": [0 for _ in cash_types]
     })
 
+initial_pork = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+initial_package = pd.DataFrame({"No": [1], "เลขที่บิล": [""], "จำนวนเงิน": [0]})
+initial_drink = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+initial_waste = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+initial_cancel = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
+
 if "pork_table" not in st.session_state:
-    st.session_state["pork_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["pork_table"] = initial_pork
 
 if "package_table" not in st.session_state:
-    st.session_state["package_table"] = pd.DataFrame({"No": [], "เลขที่บิล": [], "จำนวนเงิน": []})
+    st.session_state["package_table"] = initial_package
 
 if "drink_table" not in st.session_state:
-    st.session_state["drink_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["drink_table"] = initial_drink
 
 if "waste_table" not in st.session_state:
-    st.session_state["waste_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["waste_table"] = initial_waste
 
 if "cancel_table" not in st.session_state:
-    st.session_state["cancel_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+    st.session_state["cancel_table"] = initial_cancel
 
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
