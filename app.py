@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import datetime
-import streamlit.components.v1 as components
 
 st.set_page_config(page_title="กรอกเงินสดหน้าร้าน", layout="centered")
 
@@ -44,10 +43,9 @@ if "next_page" not in st.session_state:
 if not st.session_state["next_page"]:
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    with st.container():
-        counts = {}
-        for label, value in cash_types:
-            counts[value] = st.number_input(f"{label}", min_value=0, step=1, key=f"cash_{value}")
+    counts = {}
+    for label, value in cash_types:
+        counts[value] = st.number_input(f"{label}", min_value=0, step=1, key=f"cash_{value}")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -81,20 +79,15 @@ if not st.session_state["next_page"]:
     total_amount = sum([value * count for value, count in counts.items()])
     pos_total = pos_cash_input + pos_transfer_input
 
-    st.markdown(f"""
-    <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
-        <h4>💰 ยอดรวมแบงค์เหรียญ: {total_amount:,} บาท</h4>
-        <h4>💳 ยอดขายรวม (เงินสด + โอน): {pos_total:,} บาท</h4>
-    </div>
-    """, unsafe_allow_html=True)
-
     st.markdown("""
-    <div style='text-align:center; padding-top:10px;'>
-        <button style='background-color:#4CAF50; color:white; padding:12px 32px; font-size:18px; border:none; border-radius:8px; cursor:pointer;'>✅ ไปหน้าเงินทอน</button>
+    <div style='text-align:center; padding-top:20px;'>
+        <form action="" method="post">
+            <input type="submit" value="✅ ไปหน้าเงินทอน" style='background-color:#4CAF50; color:white; padding:12px 36px; font-size:18px; border:none; border-radius:10px; cursor:pointer;'>
+        </form>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("ไปหน้าเงินทอน", key="next_button"):
+    if st.button("ไปหน้าเงินทอน", key="next_button", use_container_width=True):
         st.session_state.update({
             "counts": counts,
             "total_amount": total_amount,
@@ -114,8 +107,7 @@ else:
     change_df = pd.DataFrame({
         "ประเภท": [label for label, _ in cash_types],
         "เงินที่ออกหน้าแรก": [st.session_state["counts"].get(value, 0) for _, value in cash_types],
-        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types],
-        "ยอดเงินรวม": [0 for _ in cash_types]
+        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types]
     })
 
     edited_change_df = st.data_editor(
@@ -126,9 +118,9 @@ else:
         key="change_editor"
     )
 
-    # คำนวณยอดเงินรวมใหม่ตามจำนวนเงินแต่ละรายการ
     change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
     total_change = sum([value * count for value, count in change_counts.items()])
+
     st.markdown(f"<h4 style='color: #4CAF50;'>ยอดเงินทอนรวม: {total_change:,} / 4,000 บาท</h4>", unsafe_allow_html=True)
 
     if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
