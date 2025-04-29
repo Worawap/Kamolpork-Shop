@@ -51,6 +51,15 @@ if not st.session_state["next_page"]:
         with col2:
             pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
+        st.markdown("<h4 style='color: #4CAF50;'>🍖 รายการหมูหมัก</h4>", unsafe_allow_html=True)
+        pork_marinated = st.number_input("ยอดขายหมูหมัก (บาท)", min_value=0, step=1)
+
+        st.markdown("<h4 style='color: #4CAF50;'>📦 รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม</h4>", unsafe_allow_html=True)
+        processed_goods = st.number_input("ยอดขายถุง/สติ๊กเกอร์/ของแปรรูป/แหนม (บาท)", min_value=0, step=1)
+
+        st.markdown("<h4 style='color: #4CAF50;'>🥤 รายการเครื่องดื่ม/เครื่องปรุง</h4>", unsafe_allow_html=True)
+        drinks_seasoning = st.number_input("ยอดขายเครื่องดื่ม/เครื่องปรุง (บาท)", min_value=0, step=1)
+
         counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
         total_amount = sum([value * count for value, count in counts.items()])
         pos_total = pos_cash_input + pos_transfer_input
@@ -79,6 +88,9 @@ if not st.session_state["next_page"]:
                 "cash_in_drawer": total_amount,
                 "waste_bills": waste_bills,
                 "cancel_bills": cancel_bills,
+                "pork_marinated": pork_marinated,
+                "processed_goods": processed_goods,
+                "drinks_seasoning": drinks_seasoning,
                 "next_page": True
             })
 
@@ -130,15 +142,11 @@ else:
         st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
         st.dataframe(send_back_df, use_container_width=True)
 
-        pos_cash = st.session_state.get("pos_cash", 0)
-        pos_transfer = st.session_state.get("pos_transfer", 0)
         cash_in_drawer = st.session_state.get("cash_in_drawer", 0)
         total_waste = sum(st.session_state.get("waste_bills", []))
         total_cancel = sum(st.session_state.get("cancel_bills", []))
 
-        pos_total = pos_cash + pos_transfer
-
-        difference = (cash_in_drawer - pos_cash) + total_waste + total_cancel
+        difference = (total_change - 4000)
 
         st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
 
@@ -153,7 +161,7 @@ else:
         """
         st.markdown(styled_summary, unsafe_allow_html=True)
 
-        if abs(difference) > 500:
+        if abs(difference) > 9:
             components.html("""
             <audio autoplay>
               <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
@@ -171,17 +179,23 @@ else:
                 "เงินขาด/เงินเกิน",
                 "ของเสีย",
                 "บิลยกเลิก",
+                "หมูหมัก",
+                "ถุง/ของแปรรูป",
+                "เครื่องดื่ม/เครื่องปรุง"
             ],
             "จำนวนเงิน (บาท)": [
-                cash_in_drawer - 4000,
+                cash_in_drawer - total_change,
                 cash_in_drawer,
-                pos_total,
-                pos_cash,
-                pos_transfer,
-                4000,
+                st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0),
+                st.session_state.get("pos_cash", 0),
+                st.session_state.get("pos_transfer", 0),
+                total_change,
                 difference,
                 total_waste,
-                total_cancel
+                total_cancel,
+                st.session_state.get("pork_marinated", 0),
+                st.session_state.get("processed_goods", 0),
+                st.session_state.get("drinks_seasoning", 0)
             ]
         })
 
