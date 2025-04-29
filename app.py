@@ -113,22 +113,27 @@ else:
 
     change_df = pd.DataFrame({
         "ประเภท": [label for label, _ in cash_types],
-        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types]
+        "เงินที่ออกหน้าแรก": [st.session_state["counts"].get(value, 0) for _, value in cash_types],
+        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types],
+        "ยอดเงินรวม": [0 for _ in cash_types]
     })
 
     edited_change_df = st.data_editor(
         change_df,
         use_container_width=True,
         hide_index=True,
-        num_rows="fixed"
+        num_rows="fixed",
+        key="change_editor"
     )
 
-    if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
-        change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
-        total_change = sum([value * count for value, count in change_counts.items()])
+    # คำนวณยอดเงินรวมใหม่ตามจำนวนเงินแต่ละรายการ
+    change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
+    total_change = sum([value * count for value, count in change_counts.items()])
+    st.markdown(f"<h4 style='color: #4CAF50;'>ยอดเงินทอนรวม: {total_change:,} / 4,000 บาท</h4>", unsafe_allow_html=True)
 
-        if total_change > 4000:
-            st.error("❌ เงินทอนเกิน 4,000 บาท กรุณาปรับยอดใหม่!")
+    if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
+        if total_change != 4000:
+            st.error("❌ เงินทอนไม่ครบ 4,000 บาท กรุณาตรวจสอบและปรับยอดให้พอดี!")
             st.stop()
 
         send_back = {}
