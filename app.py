@@ -30,19 +30,14 @@ initial_cancel = pd.DataFrame({"No": [1], "รายการ": [""], "จำน
 
 if "pork_table" not in st.session_state:
     st.session_state["pork_table"] = initial_pork
-
 if "package_table" not in st.session_state:
     st.session_state["package_table"] = initial_package
-
 if "drink_table" not in st.session_state:
     st.session_state["drink_table"] = initial_drink
-
 if "waste_table" not in st.session_state:
     st.session_state["waste_table"] = initial_waste
-
 if "cancel_table" not in st.session_state:
     st.session_state["cancel_table"] = initial_cancel
-
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
 
@@ -114,7 +109,61 @@ if not st.session_state["next_page"]:
             "next_page": True
         })
 else:
-    st.markdown("""
-        <h2 style='color: #4CAF50;'>💵 หน้ากรอกเงินทอน</h2>
-        <p>กำลังเตรียมระบบเงินทอนให้พร้อมใช้งาน...</p>
-    """, unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #4CAF50;'>💵 หน้ากรอกเงินทอน</h2>", unsafe_allow_html=True)
+
+    change_df = pd.DataFrame({
+        "ประเภท": [label for label, _ in cash_types],
+        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types]
+    })
+
+    edited_change_df = st.data_editor(
+        change_df,
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed"
+    )
+
+    if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
+        change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
+        total_change = sum([value * count for value, count in change_counts.items()])
+
+        if total_change > 4000:
+            st.error("❌ เงินทอนเกิน 4,000 บาท กรุณาปรับยอดใหม่!")
+            st.stop()
+
+        send_back = {}
+        for value in st.session_state["counts"]:
+            qty_after_change = st.session_state["counts"][value] - change_counts.get(value, 0)
+            if qty_after_change > 0:
+                send_back[value] = qty_after_change
+
+        send_back_df = pd.DataFrame([
+            {"ประเภท": f"{value} บาท", "จำนวนที่ต้องส่งกลับ": count}
+            for value, count in send_back.items()
+        ])
+
+        st.success("✅ สรุปผลเรียบร้อย!")
+
+        st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
+        st.dataframe(send_back_df, use_container_width=True)
+
+        pos_cash = st.session_state.get("pos_cash", 0)
+        pos_transfer = st.session_state.get("pos_transfer", 0)
+        cash_in_drawer = st.session_state.get("cash_in_drawer", 0)
+        total_amount = st.session_state.get("total_amount", 0)
+        total_waste = st.session_state.get("waste_bills", 0)
+        total_cancel = st.session_state.get("cancel_bills", 0)
+
+        difference = ((cash_in_drawer - 4000) + total_waste + total_cancel) - pos_cash
+
+        diff_color = "#4CAF50" if difference > 0 else ("#FF9800" if difference == 0 else "#F44336")
+        diff_message = "ยอดเงินตรงเป๊ะ เยี่ยมมาก! 🎉" if difference == 0 else ("เงินเกินนิดหน่อยครับ" if difference > 0 else "เงินขาด กรุณาตรวจสอบ!")
+
+        styled_summary = f"""
+        <div style='padding:10px; background-color:{diff_color}; color:white; border-radius:8px; text-align:center;'>
+            <h2>{diff_message}</h2>
+            <p>ขาด/เกิน {difference:.2f} บาท</p>
+        </div>
+        """
+        st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
+        st.markdown(styled_summary, unsafe_allow_html=True)
