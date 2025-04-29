@@ -28,180 +28,87 @@ if "cash_editor" not in st.session_state:
         "จำนวน": [0 for _ in cash_types]
     })
 
+if "pork_table" not in st.session_state:
+    st.session_state["pork_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+
+if "package_table" not in st.session_state:
+    st.session_state["package_table"] = pd.DataFrame({"No": [], "เลขที่บิล": [], "จำนวนเงิน": []})
+
+if "drink_table" not in st.session_state:
+    st.session_state["drink_table"] = pd.DataFrame({"No": [], "รายการ": [], "จำนวนเงิน": []})
+
 if "next_page" not in st.session_state:
     st.session_state["next_page"] = False
 
 if not st.session_state["next_page"]:
-    with st.form("cash_form"):
-        st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-        edited_cash_df = st.data_editor(
-            st.session_state["cash_editor"],
-            use_container_width=True,
-            hide_index=True,
-            num_rows="fixed",
-            key="cash_editor_editor"
-        )
-
-        st.session_state["cash_editor"] = edited_cash_df
-
-        col1, col2 = st.columns(2)
-        with col1:
-            pos_cash_input = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
-        with col2:
-            pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
-
-        st.markdown("<h4 style='color: #4CAF50;'>🍖 รายการหมูหมัก</h4>", unsafe_allow_html=True)
-        pork_marinated = st.number_input("ยอดขายหมูหมัก (บาท)", min_value=0, step=1)
-
-        st.markdown("<h4 style='color: #4CAF50;'>📦 รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม</h4>", unsafe_allow_html=True)
-        processed_goods = st.number_input("ยอดขายถุง/สติ๊กเกอร์/ของแปรรูป/แหนม (บาท)", min_value=0, step=1)
-
-        st.markdown("<h4 style='color: #4CAF50;'>🥤 รายการเครื่องดื่ม/เครื่องปรุง</h4>", unsafe_allow_html=True)
-        drinks_seasoning = st.number_input("ยอดขายเครื่องดื่ม/เครื่องปรุง (บาท)", min_value=0, step=1)
-
-        counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
-        total_amount = sum([value * count for value, count in counts.items()])
-        pos_total = pos_cash_input + pos_transfer_input
-
-        st.markdown(f"""
-        <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
-            <h4>💰 ยอดรวมแบงค์เหรียญ: {total_amount:,} บาท</h4>
-            <h4>💳 ยอดขายรวม (เงินสด + โอน): {pos_total:,} บาท</h4>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("<h4 style='color: #4CAF50;'>📦 บิลของเสีย</h4>", unsafe_allow_html=True)
-        waste_bills = [st.number_input(f"ของเสีย {i+1}", min_value=0, step=1, key=f"waste_{i}") for i in range(5)]
-
-        st.markdown("<h4 style='color: #4CAF50;'>🧾 บิลยกเลิก</h4>", unsafe_allow_html=True)
-        cancel_bills = [st.number_input(f"บิลยกเลิก {i+1}", min_value=0, step=1, key=f"cancel_{i}") for i in range(5)]
-
-        submitted = st.form_submit_button("✅ คำนวณยอดเงินและไปหน้าเงินทอน")
-
-        if submitted:
-            st.session_state.update({
-                "counts": counts,
-                "total_amount": total_amount,
-                "pos_cash": pos_cash_input,
-                "pos_transfer": pos_transfer_input,
-                "cash_in_drawer": total_amount,
-                "waste_bills": waste_bills,
-                "cancel_bills": cancel_bills,
-                "pork_marinated": pork_marinated,
-                "processed_goods": processed_goods,
-                "drinks_seasoning": drinks_seasoning,
-                "next_page": True
-            })
-
-else:
-    st.markdown("<h3 style='color: #4CAF50;'>💰 ใส่ข้อมูลเงินทอนที่ต้องเหลือในลิ้นชัก</h3>", unsafe_allow_html=True)
-
-    change_df = pd.DataFrame({
-        "ประเภท": [label for label, _ in cash_types],
-        "เงินที่กรอกหน้าแรก": [st.session_state["cash_editor"].iloc[i]["จำนวน"] for i in range(len(cash_types))],
-        "จำนวนที่ต้องเหลือ": [0 for _ in cash_types]
-    })
-
-    edited_change_df = st.data_editor(
-        change_df,
+    edited_cash_df = st.data_editor(
+        st.session_state["cash_editor"],
         use_container_width=True,
         hide_index=True,
         num_rows="fixed",
-        key="change_editor"
+        key="cash_editor_editor"
     )
 
-    change_counts = dict(zip([value for _, value in cash_types], edited_change_df["จำนวนที่ต้องเหลือ"]))
-    total_change = sum([value * count for value, count in change_counts.items()])
+    st.session_state["cash_editor"] = edited_cash_df
+
+    col1, col2 = st.columns(2)
+    with col1:
+        pos_cash_input = st.number_input("💵 เงินสดที่ได้รับ (จาก POS)", min_value=0, step=1)
+    with col2:
+        pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
+
+    st.markdown("<h4 style='color: #4CAF50;'>🍖 รายการหมูหมัก</h4>", unsafe_allow_html=True)
+    st.session_state["pork_table"] = st.data_editor(
+        st.session_state["pork_table"],
+        use_container_width=True,
+        key="pork_table_editor"
+    )
+
+    pork_total = st.session_state["pork_table"]["จำนวนเงิน"].sum() if not st.session_state["pork_table"].empty else 0
+    st.markdown(f"รวมยอดหมูหมัก: {pork_total} บาท")
+
+    st.markdown("<h4 style='color: #4CAF50;'>📦 รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม</h4>", unsafe_allow_html=True)
+    st.session_state["package_table"] = st.data_editor(
+        st.session_state["package_table"],
+        use_container_width=True,
+        key="package_table_editor"
+    )
+
+    package_total = st.session_state["package_table"]["จำนวนเงิน"].sum() if not st.session_state["package_table"].empty else 0
+    st.markdown(f"รวมยอดถุง/ของแปรรูป/แหนม: {package_total} บาท")
+
+    st.markdown("<h4 style='color: #4CAF50;'>🥤 รายการเครื่องดื่ม/เครื่องปรุง</h4>", unsafe_allow_html=True)
+    st.session_state["drink_table"] = st.data_editor(
+        st.session_state["drink_table"],
+        use_container_width=True,
+        key="drink_table_editor"
+    )
+
+    drink_total = st.session_state["drink_table"]["จำนวนเงิน"].sum() if not st.session_state["drink_table"].empty else 0
+    st.markdown(f"รวมยอดเครื่องดื่ม/เครื่องปรุง: {drink_total} บาท")
+
+    counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
+    total_amount = sum([value * count for value, count in counts.items()])
+    pos_total = pos_cash_input + pos_transfer_input
 
     st.markdown(f"""
-    <div style='padding:10px; background-color:#FFF8E1; color:#795548; border-radius:8px; text-align:center;'>
-        <h4>💼 ยอดเงินทอนรวมที่ต้องเหลือ: {total_change:,} บาท</h4>
+    <div style='padding:10px; background-color:#E0F7FA; color:#006064; border-radius:8px; text-align:center;'>
+        <h4>💰 ยอดรวมแบงค์เหรียญ: {total_amount:,} บาท</h4>
+        <h4>💳 ยอดขายรวม (เงินสด + โอน): {pos_total:,} บาท</h4>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("📋 สรุปผลเงินทอนและส่งเงิน"):
-
-        if total_change > 4000:
-            st.error("❌ เงินทอนเกิน 4,000 บาท กรุณาปรับยอดใหม่!")
-            st.stop()
-
-        send_back = {}
-        for value in st.session_state["counts"]:
-            qty_after_change = st.session_state["counts"][value] - change_counts.get(value, 0)
-            if qty_after_change > 0:
-                send_back[value] = qty_after_change
-
-        send_back_df = pd.DataFrame([
-            {"ประเภท": f"{value} บาท", "จำนวนที่ต้องส่งกลับ": count}
-            for value, count in send_back.items()
-        ])
-
-        st.success("✅ สรุปผลเรียบร้อย!")
-
-        st.markdown("<h3 style='color: #795548;'>📋 เงินสดที่ต้องส่งกลับบริษัท</h3>", unsafe_allow_html=True)
-        st.dataframe(send_back_df, use_container_width=True)
-
-        cash_in_drawer = st.session_state.get("cash_in_drawer", 0)
-        total_waste = sum(st.session_state.get("waste_bills", []))
-        total_cancel = sum(st.session_state.get("cancel_bills", []))
-
-        difference = (total_change - 4000)
-
-        st.markdown("<h3 style='color: #E91E63;'>📢 สรุปยอดตรวจสอบ</h3>", unsafe_allow_html=True)
-
-        diff_color = "#4CAF50" if difference > 0 else ("#FF9800" if difference == 0 else "#F44336")
-        diff_message = "ยอดเงินตรงเป๊ะ เยี่ยมมาก! 🎉" if difference == 0 else ("เงินเกินนิดหน่อยครับ" if difference > 0 else "เงินขาด กรุณาตรวจสอบ!")
-
-        styled_summary = f"""
-        <div style='padding:10px; background-color:{diff_color}; color:white; border-radius:8px; text-align:center;'>
-            <h2>{diff_message}</h2>
-            <p>ขาด/เกิน {difference:.2f} บาท</p>
-        </div>
-        """
-        st.markdown(styled_summary, unsafe_allow_html=True)
-
-        if abs(difference) > 9:
-            components.html("""
-            <audio autoplay>
-              <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
-            </audio>
-            """, height=0)
-
-        summary_df = pd.DataFrame({
-            "รายการ": [
-                "ยอดส่งเงิน",
-                "เงินเหลือไว้ในลิ้นชัก",
-                "ยอดขายรวม",
-                "เงินสดที่ได้รับ",
-                "เงินโอน",
-                "เงินทอน",
-                "เงินขาด/เงินเกิน",
-                "ของเสีย",
-                "บิลยกเลิก",
-                "หมูหมัก",
-                "ถุง/ของแปรรูป",
-                "เครื่องดื่ม/เครื่องปรุง"
-            ],
-            "จำนวนเงิน (บาท)": [
-                cash_in_drawer - total_change,
-                cash_in_drawer,
-                st.session_state.get("pos_cash", 0) + st.session_state.get("pos_transfer", 0),
-                st.session_state.get("pos_cash", 0),
-                st.session_state.get("pos_transfer", 0),
-                total_change,
-                difference,
-                total_waste,
-                total_cancel,
-                st.session_state.get("pork_marinated", 0),
-                st.session_state.get("processed_goods", 0),
-                st.session_state.get("drinks_seasoning", 0)
-            ]
+    if st.button("✅ ไปหน้าเงินทอน"):
+        st.session_state.update({
+            "counts": counts,
+            "total_amount": total_amount,
+            "pos_cash": pos_cash_input,
+            "pos_transfer": pos_transfer_input,
+            "cash_in_drawer": total_amount,
+            "pork_marinated": pork_total,
+            "processed_goods": package_total,
+            "drinks_seasoning": drink_total,
+            "next_page": True
         })
-
-        st.dataframe(summary_df, use_container_width=True)
-
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        filename = f"cashflow_{today}.csv"
-        summary_df.to_csv(filename, index=False)
-        st.success(f"บันทึกข้อมูลลงไฟล์ {filename} เรียบร้อยแล้ว!")
