@@ -22,12 +22,6 @@ cash_types = [
     ("1 บาท (เหรียญ)", 1)
 ]
 
-if "cash_editor" not in st.session_state:
-    st.session_state["cash_editor"] = pd.DataFrame({
-        "ประเภท": [label for label, _ in cash_types],
-        "จำนวน": [0 for _ in cash_types]
-    })
-
 initial_pork = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
 initial_package = pd.DataFrame({"No": [1], "เลขที่บิล": [""], "จำนวนเงิน": [0]})
 initial_drink = pd.DataFrame({"No": [1], "รายการ": [""], "จำนวนเงิน": [0]})
@@ -55,14 +49,9 @@ if "next_page" not in st.session_state:
 if not st.session_state["next_page"]:
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    st.session_state["cash_editor"] = st.data_editor(
-        st.session_state["cash_editor"],
-        use_container_width=True,
-        hide_index=True,
-        num_rows="dynamic",
-        key="cash_editor_editor",
-        disabled=False
-    )
+    counts = {}
+    for label, value in cash_types:
+        counts[value] = st.number_input(f"{label}", min_value=0, step=1, key=f"cash_{value}")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -93,7 +82,6 @@ if not st.session_state["next_page"]:
     waste_total = section("บิลของเสีย", "waste_table")
     cancel_total = section("บิลยกเลิก", "cancel_table")
 
-    counts = dict(zip([value for _, value in cash_types], st.session_state["cash_editor"]["จำนวน"]))
     total_amount = sum([value * count for value, count in counts.items()])
     pos_total = pos_cash_input + pos_transfer_input
 
