@@ -54,7 +54,8 @@ if not st.session_state["next_page"]:
         use_container_width=True,
         hide_index=True,
         num_rows="fixed",
-        key="cash_editor_editor"
+        key="cash_editor_editor",
+        disabled=False
     )
 
     st.session_state["cash_editor"] = edited_cash_df
@@ -69,7 +70,8 @@ if not st.session_state["next_page"]:
     st.session_state["pork_table"] = st.data_editor(
         st.session_state["pork_table"],
         use_container_width=True,
-        key="pork_table_editor"
+        key="pork_table_editor",
+        disabled=False
     )
 
     pork_total = st.session_state["pork_table"]["จำนวนเงิน"].sum() if not st.session_state["pork_table"].empty else 0
@@ -79,7 +81,8 @@ if not st.session_state["next_page"]:
     st.session_state["package_table"] = st.data_editor(
         st.session_state["package_table"],
         use_container_width=True,
-        key="package_table_editor"
+        key="package_table_editor",
+        disabled=False
     )
 
     package_total = st.session_state["package_table"]["จำนวนเงิน"].sum() if not st.session_state["package_table"].empty else 0
@@ -89,7 +92,8 @@ if not st.session_state["next_page"]:
     st.session_state["drink_table"] = st.data_editor(
         st.session_state["drink_table"],
         use_container_width=True,
-        key="drink_table_editor"
+        key="drink_table_editor",
+        disabled=False
     )
 
     drink_total = st.session_state["drink_table"]["จำนวนเงิน"].sum() if not st.session_state["drink_table"].empty else 0
