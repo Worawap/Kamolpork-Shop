@@ -49,9 +49,10 @@ if "next_page" not in st.session_state:
 if not st.session_state["next_page"]:
     st.markdown("<h3 style='color: #4CAF50;'>📝 กรอกจำนวนแบงค์และเหรียญ</h3>", unsafe_allow_html=True)
 
-    counts = {}
-    for label, value in cash_types:
-        counts[value] = st.number_input(f"{label}", min_value=0, step=1, key=f"cash_{value}")
+    with st.container():
+        counts = {}
+        for label, value in cash_types:
+            counts[value] = st.number_input(f"{label}", min_value=0, step=1, key=f"cash_{value}")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -60,7 +61,7 @@ if not st.session_state["next_page"]:
         pos_transfer_input = st.number_input("🏦 เงินโอน (จาก POS)", min_value=0, step=1)
 
     def section(title, table_key):
-        st.markdown(f"<h4 style='color: #4CAF50;'>🍖 {title}</h4>", unsafe_allow_html=True)
+        st.markdown(f"<h4 style='color: #4CAF50;'>{title}</h4>", unsafe_allow_html=True)
         st.session_state[table_key] = st.data_editor(
             st.session_state[table_key],
             use_container_width=True,
@@ -76,11 +77,11 @@ if not st.session_state["next_page"]:
         st.markdown(f"รวมยอด {title}: {total:,} บาท")
         return total
 
-    pork_total = section("รายการหมูหมัก", "pork_table")
-    package_total = section("รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม", "package_table")
-    drink_total = section("รายการเครื่องดื่ม/เครื่องปรุง", "drink_table")
-    waste_total = section("บิลของเสีย", "waste_table")
-    cancel_total = section("บิลยกเลิก", "cancel_table")
+    pork_total = section("🥩 รายการหมูหมัก", "pork_table")
+    package_total = section("📦 รายการถุง/สติ๊กเกอร์/ของแปรรูป/แหนม", "package_table")
+    drink_total = section("🥤 รายการเครื่องดื่ม/เครื่องปรุง", "drink_table")
+    waste_total = section("📦 บิลของเสีย", "waste_table")
+    cancel_total = section("🧾 บิลยกเลิก", "cancel_table")
 
     total_amount = sum([value * count for value, count in counts.items()])
     pos_total = pos_cash_input + pos_transfer_input
@@ -92,7 +93,13 @@ if not st.session_state["next_page"]:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("✅ ไปหน้าเงินทอน"):
+    st.markdown("""
+    <div style='text-align:center; padding-top:10px;'>
+        <button style='background-color:#4CAF50; color:white; padding:12px 32px; font-size:18px; border:none; border-radius:8px; cursor:pointer;'>✅ ไปหน้าเงินทอน</button>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("ไปหน้าเงินทอน", key="next_button"):
         st.session_state.update({
             "counts": counts,
             "total_amount": total_amount,
